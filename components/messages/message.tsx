@@ -6,22 +6,39 @@ import { format } from "date-fns";
 import { User } from "lucide-react";
 
 interface MessageProps {
-  message: Message;
+  message: Message & { user: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    imageUrl: string | null;
+  }};
 }
 
 export function MessageComponent({ message }: MessageProps) {
-  const { user } = useUser();
-  const isOwn = message.userId === user?.id;
+  const { user: currentUser } = useUser();
+  const isOwn = message.userId === currentUser?.id;
 
   return (
     <div className={`flex gap-3 p-4 ${isOwn ? 'flex-row-reverse' : ''}`}>
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-        <User className="h-5 w-5" />
+        {message.user.imageUrl ? (
+          <img 
+            src={message.user.imageUrl} 
+            alt="Profile" 
+            className="h-8 w-8 rounded-full"
+          />
+        ) : (
+          <User className="h-5 w-5" />
+        )}
       </div>
       <div className={`flex flex-col gap-1 ${isOwn ? 'items-end' : ''}`}>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">
-            {isOwn ? user?.fullName || 'You' : `User ${message.userId.slice(0, 6)}`}
+            {isOwn 
+              ? 'You'
+              : message.user.displayName || message.user.email.split('@')[0]}
           </span>
           <span className="text-xs text-muted-foreground">
             {format(new Date(message.createdAt), 'p')}

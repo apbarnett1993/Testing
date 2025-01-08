@@ -8,6 +8,15 @@ export interface Message {
   updatedAt: Date;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  displayName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string | null;
+}
+
 export interface ApiResponse<T> {
   data?: T;
   error?: string;

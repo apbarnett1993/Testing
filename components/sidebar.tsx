@@ -215,10 +215,12 @@ function AppSidebar() {
               ) : (
                 <>
                   <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <User className="mr-2 h-4 w-4" />
-                      {currentUser?.emailAddresses[0]?.emailAddress || 'Profile'}
-                    </SidebarMenuButton>
+                    <Link href="/settings" passHref>
+                      <SidebarMenuButton>
+                        <User className="mr-2 h-4 w-4" />
+                        {currentUser?.emailAddresses[0]?.emailAddress || 'Profile'}
+                      </SidebarMenuButton>
+                    </Link>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton onClick={handleSignOut}>

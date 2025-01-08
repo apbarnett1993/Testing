@@ -27,6 +27,18 @@ export async function POST(req: Request) {
         channelId,
         toUserId,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            firstName: true,
+            lastName: true,
+            imageUrl: true,
+          }
+        }
+      }
     });
 
     return NextResponse.json(message);
@@ -62,6 +74,18 @@ export async function GET(req: Request) {
         where: {
           channelId,
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              displayName: true,
+              firstName: true,
+              lastName: true,
+              imageUrl: true,
+            }
+          }
+        },
         orderBy: {
           createdAt: "asc",
         },
@@ -76,6 +100,18 @@ export async function GET(req: Request) {
             { userId, toUserId },
             { userId: toUserId, toUserId: userId },
           ],
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              displayName: true,
+              firstName: true,
+              lastName: true,
+              imageUrl: true,
+            }
+          }
         },
         orderBy: {
           createdAt: "asc",
