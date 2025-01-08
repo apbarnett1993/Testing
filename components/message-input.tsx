@@ -1,51 +1,51 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useUser } from "@clerk/nextjs"
-import { SendHorizontal } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { useSocket } from "@/lib/socket"
+import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { SendHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useSocket } from "@/lib/socket";
 
 interface MessageInputProps {
-  channelId?: string
-  toUserId?: string
+  channelId?: string;
+  toUserId?: string;
 }
 
 export function MessageInput({ channelId, toUserId }: MessageInputProps) {
-  const [content, setContent] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { user } = useUser()
-  const socket = useSocket()
+  const [content, setContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUser();
+  const socket = useSocket();
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !content.trim() || isLoading || !socket) return
+    e.preventDefault();
+    if (!user || !content.trim() || isLoading || !socket) return;
 
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       
       socket.emit('message', {
         content: content.trim(),
         userId: user.id,
         channelId,
         toUserId,
-      })
+      });
 
-      setContent("")
+      setContent("");
     } catch (error) {
-      console.error("Failed to send message:", error)
+      console.error("Failed to send message:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
+      e.preventDefault();
+      handleSubmit(e);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
@@ -64,6 +64,5 @@ export function MessageInput({ channelId, toUserId }: MessageInputProps) {
         </Button>
       </div>
     </form>
-  )
-}
-
+  );
+} 

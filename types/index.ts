@@ -2,10 +2,18 @@ export interface Message {
   id: string;
   content: string;
   userId: string;
-  channelId?: string;
-  toUserId?: string;
+  channelId: string | null;
+  toUserId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  user: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    imageUrl: string | null;
+  };
 }
 
 export interface User {

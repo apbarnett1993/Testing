@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useMessages } from "./messages-context";
 import { MessageComponent } from "./message";
+import { useSocket } from "@/lib/socket";
+import { MessageWithUser } from "@/types/socket";
 
 interface MessageListProps {
   channelId?: string;
@@ -10,8 +12,9 @@ interface MessageListProps {
 }
 
 export function MessageList({ channelId, toUserId }: MessageListProps) {
-  const { messages, isLoading, error, fetchMessages } = useMessages();
+  const { messages, isLoading, error, fetchMessages, addMessage } = useMessages();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const socket = useSocket();
 
   useEffect(() => {
     console.log("MessageList - Fetching messages for:", { channelId, toUserId });
@@ -19,6 +22,20 @@ export function MessageList({ channelId, toUserId }: MessageListProps) {
       console.error("MessageList - Failed to fetch messages:", err);
     });
   }, [channelId, toUserId, fetchMessages]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for new messages
+    socket.on('message', (message: MessageWithUser) => {
+      console.log('Received real-time message:', message);
+      addMessage(message);
+    });
+
+    return () => {
+      socket.off('message');
+    };
+  }, [socket, addMessage]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
