@@ -7,23 +7,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-const EMOJI_GROUPS = {
-  "Smileys": ["😀", "😊", "🙂", "😄", "😅", "😂", "🤣", "😉", "😍", "🥰"],
-  "Gestures": ["👍", "👎", "👌", "👏", "🙌", "👋", "✌️", "🤞", "🤝", "🤗"],
-  "Hearts": ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💖"],
-  "Objects": ["💡", "⭐", "🔥", "✨", "💫", "🎉", "🎈", "🎁", "💎", "🔔"],
-};
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import { useTheme } from "next-themes";
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
 }
 
 export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
+  const { theme } = useTheme();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           className="text-muted-foreground hover:text-foreground"
@@ -31,27 +30,18 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
           <Smile className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="grid gap-4 p-4">
-          {Object.entries(EMOJI_GROUPS).map(([category, emojis]) => (
-            <div key={category}>
-              <h4 className="mb-2 text-sm font-medium">{category}</h4>
-              <div className="grid grid-cols-10 gap-2">
-                {emojis.map((emoji) => (
-                  <Button
-                    key={emoji}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-muted"
-                    onClick={() => onEmojiSelect(emoji)}
-                  >
-                    {emoji}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+      <PopoverContent className="w-full p-0 border-none" align="end">
+        <Picker 
+          data={data} 
+          onEmojiSelect={(emoji: any) => onEmojiSelect(emoji.native)}
+          theme={theme === 'dark' ? 'dark' : 'light'}
+          previewPosition="none"
+          skinTonePosition="none"
+          searchPosition="none"
+          navPosition="none"
+          perLine={8}
+          maxFrequentRows={1}
+        />
       </PopoverContent>
     </Popover>
   );
