@@ -1,11 +1,17 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { use } from 'react'
 import { MessageList } from '@/components/messages/message-list'
 import { MessageInput } from '@/components/messages/message-input'
 import { Channel } from '@/components/sidebar'
 
-export default function ChannelPage({ params }: { params: { id: string } }) {
+interface PageParams {
+  id: string;
+}
+
+export default function ChannelPage({ params }: { params: Promise<PageParams> }) {
+  const resolvedParams = use(params)
   const [channel, setChannel] = useState<Channel | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -14,7 +20,7 @@ export default function ChannelPage({ params }: { params: { id: string } }) {
     fetch('/api/channels')
       .then(res => res.json())
       .then(channels => {
-        const found = channels.find((c: Channel) => c.id === params.id)
+        const found = channels.find((c: Channel) => c.id === resolvedParams.id)
         if (found) {
           setChannel(found)
         } else {
@@ -25,7 +31,7 @@ export default function ChannelPage({ params }: { params: { id: string } }) {
         console.error('Failed to fetch channel:', err)
         setError('Failed to load channel')
       })
-  }, [params.id])
+  }, [resolvedParams.id])
 
   if (error) {
     return <div className="p-4 text-red-500">{error}</div>

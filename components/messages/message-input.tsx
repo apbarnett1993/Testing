@@ -4,8 +4,8 @@ import { useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { SendHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { useSocket } from "@/lib/socket"
+import { RichTextEditor } from "./rich-text-editor"
 
 interface MessageInputProps {
   channelId?: string
@@ -18,8 +18,8 @@ export function MessageInput({ channelId, toUserId }: MessageInputProps) {
   const { user } = useUser()
   const socket = useSocket()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault()
     if (!user || !content.trim() || isLoading || !socket) return
 
     try {
@@ -40,28 +40,21 @@ export function MessageInput({ channelId, toUserId }: MessageInputProps) {
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
-    }
-  }
-
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
-      <div className="flex gap-2">
-        <Textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          className="resize-none"
+      <div className="flex flex-col gap-2">
+        <RichTextEditor
+          content={content}
+          onChange={setContent}
+          onSubmit={handleSubmit}
           disabled={isLoading}
         />
-        <Button type="submit" size="icon" disabled={isLoading}>
-          <SendHorizontal className="h-4 w-4" />
-          <span className="sr-only">Send message</span>
-        </Button>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isLoading}>
+            <SendHorizontal className="h-4 w-4 mr-2" />
+            Send
+          </Button>
+        </div>
       </div>
     </form>
   )
