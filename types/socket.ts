@@ -46,6 +46,7 @@ export interface ReactionPayload {
 export interface RemoveReactionPayload {
   messageId: string;
   emoji: string;
+  userId: string;
 }
 
 export interface MessageReaction {

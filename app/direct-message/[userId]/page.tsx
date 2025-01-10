@@ -1,20 +1,19 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { MessageList } from '@/components/messages/message-list'
 import { MessageInput } from '@/components/messages/message-input'
 import { User } from '@/components/sidebar'
 
 console.log('DirectMessagePage component loaded');
 
-export default function DirectMessagePage({ params }: { params: { userId: string } }) {
-  console.log('DirectMessagePage rendering with params:', params);
-  
+export default function DirectMessagePage({ params }: { params: Promise<{ userId: string }> }) {
+  const resolvedParams = use(params);
   const [user, setUser] = useState<User | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log('Fetching user details for ID:', params.userId);
+    console.log('Fetching user details for ID:', resolvedParams.userId);
     
     // Fetch user details from the API
     fetch('/api/users')
@@ -24,7 +23,7 @@ export default function DirectMessagePage({ params }: { params: { userId: string
       })
       .then(users => {
         console.log('Fetched users:', users);
-        const found = users.find((u: User) => u.id === params.userId)
+        const found = users.find((u: User) => u.id === resolvedParams.userId)
         console.log('Found user:', found);
         if (found) {
           setUser(found)
@@ -36,7 +35,7 @@ export default function DirectMessagePage({ params }: { params: { userId: string
         console.error('Failed to fetch user:', err)
         setError('Failed to load user')
       })
-  }, [params.userId])
+  }, [resolvedParams.userId])
 
   console.log('Current state:', { user, error, params });
 
@@ -45,7 +44,7 @@ export default function DirectMessagePage({ params }: { params: { userId: string
   }
 
   if (!user) {
-    return <div className="p-4">Loading user {params.userId}...</div>
+    return <div className="p-4">Loading user {resolvedParams.userId}...</div>
   }
 
   return (
