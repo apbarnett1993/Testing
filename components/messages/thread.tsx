@@ -30,7 +30,11 @@ export function Thread({ parentMessage, isOpen, onClose }: ThreadProps) {
       userId: r.userId,
       user: r.user || { displayName: null, email: '' }
     })) || [],
-    thread: msg.thread,
+    
+    thread: msg.thread ? {
+      id: msg.thread.id, 
+      messages: msg.thread.messages.map(m => convertMessage(m)) 
+    } : undefined
   });
 
   useEffect(() => {
