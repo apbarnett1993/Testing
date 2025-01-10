@@ -4,8 +4,8 @@ export interface Message {
   userId: string;
   channelId: string | null;
   toUserId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   user: {
     id: string;
     email: string;
@@ -14,6 +14,15 @@ export interface Message {
     lastName: string | null;
     imageUrl: string | null;
   };
+  reactions: Array<{
+    id: string;
+    emoji: string;
+    userId: string;
+    user: {
+      displayName: string | null;
+      email: string;
+    };
+  }>;
 }
 
 export interface User {

@@ -20,6 +20,7 @@ model User {
   lastSyncedAt  DateTime  @default(now())
   messages      Message[] @relation("UserMessages")
   receivedDMs   Message[] @relation("ReceivedDMs")
+  reactions     MessageReaction[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -33,6 +34,7 @@ model Message {
   channel   Channel? @relation(fields: [channelId], references: [id])
   toUserId  String?  // for DMs
   toUser    User?    @relation("ReceivedDMs", fields: [toUserId], references: [id])
+  reactions MessageReaction[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -43,4 +45,19 @@ model Channel {
   messages  Message[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  emoji     String   // The emoji character/unicode
+  userId    String
+  messageId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id])
+  message Message @relation(fields: [messageId], references: [id])
+
+  // Prevent duplicate reactions from the same user on the same message with the same emoji
+  @@unique([userId, messageId, emoji])
 } 

@@ -5,6 +5,7 @@ import { Hash, MessageSquare, User, ChevronDown, Plus, LogIn, LogOut } from 'luc
 import Link from 'next/link'
 import { useClerk, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
+import { useSocket } from "@/lib/socket"
 
 import {
   Sidebar,
@@ -50,6 +51,7 @@ function AppSidebar() {
   const { signOut } = useClerk()
   const { user: currentUser, isSignedIn } = useUser()
   const router = useRouter()
+  const socket = useSocket()
 
   React.useEffect(() => {
     // Fetch channels from the API
@@ -73,7 +75,7 @@ function AppSidebar() {
 
   const handleAddChannel = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newChannelName.trim() || isLoading) return
+    if (!newChannelName.trim() || isLoading || !socket) return
 
     try {
       setIsLoading(true)
@@ -94,6 +96,20 @@ function AppSidebar() {
       setChannels(prev => [...prev, newChannel])
       setNewChannelName("")
       setIsDialogOpen(false)
+
+      // Debug: Log socket state
+      console.log('Socket state before join:', { 
+        connected: socket.connected,
+        id: socket.id
+      });
+
+      // Join the new channel's socket room
+      socket.emit('join_channel', newChannel.id);
+      console.log('Emitted join_channel event:', {
+        channelId: newChannel.id,
+        socketId: socket.id
+      });
+
       // Navigate to the new channel
       router.push(`/channel/${newChannel.id}`)
     } catch (error) {
