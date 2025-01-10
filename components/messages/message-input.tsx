@@ -10,9 +10,10 @@ import { RichTextEditor } from "./rich-text-editor"
 interface MessageInputProps {
   channelId?: string
   toUserId?: string
+  threadId?: string
 }
 
-export function MessageInput({ channelId, toUserId }: MessageInputProps) {
+export function MessageInput({ channelId, toUserId, threadId }: MessageInputProps) {
   const [content, setContent] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useUser()
@@ -30,6 +31,7 @@ export function MessageInput({ channelId, toUserId }: MessageInputProps) {
         userId: user.id,
         channelId,
         toUserId,
+        threadId,
       })
 
       setContent("")

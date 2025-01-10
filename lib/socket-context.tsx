@@ -60,25 +60,37 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         // Handle incoming messages
         socketInstance.on('message', (message: MessageWithUser) => {
           console.log('Received message:', message);
-          addMessage(message);
+          // Only add to main channel if it's not a thread message
+          if (!message.threadId) {
+            addMessage(message);
+          }
+        });
+
+        // Handle thread messages separately
+        socketInstance.on('thread:message', (message: MessageWithUser) => {
+          console.log('Received thread message:', message);
+          // Thread messages are handled by the Thread component
         });
 
         setSocket(socketInstance);
       }
     }
 
-    initSocket();
+    initSocket().catch(err => {
+      console.error('Failed to initialize socket:', err);
+    });
 
-    // Cleanup function
     return () => {
       if (socket) {
-        console.log('Cleaning up socket connection');
+        socket.off('connect');
+        socket.off('disconnect');
+        socket.off('error');
+        socket.off('message');
+        socket.off('thread:message');
         socket.disconnect();
-        setSocket(null);
-        setIsConnected(false);
       }
     };
-  }, [addMessage, getToken, userId]);
+  }, [socket, userId, getToken, addMessage]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

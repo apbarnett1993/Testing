@@ -8,10 +8,13 @@
 import { Message } from "@/types";
 import { useUser } from "@clerk/nextjs";
 import { format } from "date-fns";
-import { User } from "lucide-react";
+import { User, MessageSquare } from "lucide-react";
 import { MessageReactions } from "./message-reactions";
 import { useSocket } from "@/lib/socket";
 import { ReactionPayload, RemoveReactionPayload } from "@/types/socket";
+import { Thread } from "./thread";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 /**
  * Props for the MessageComponent including the message data with user info
@@ -45,6 +48,7 @@ export function MessageComponent({ message }: MessageProps) {
   const { user: currentUser } = useUser();
   const socket = useSocket();
   const isOwn = message.userId === currentUser?.id;
+  const [isThreadOpen, setIsThreadOpen] = useState(false);
 
   const handleReact = (emoji: string) => {
     if (!socket || !currentUser) return;
@@ -115,14 +119,35 @@ export function MessageComponent({ message }: MessageProps) {
           dangerouslySetInnerHTML={{ __html: message.content }}
         />
 
-        {/* Message reactions section */}
-        <MessageReactions
-          reactions={message.reactions || []}
-          onReact={handleReact}
-          onRemoveReaction={handleRemoveReaction}
-          currentUserId={currentUser?.id || ''}
-        />
+        {/* Message actions */}
+        <div className="flex items-center gap-2">
+          {/* Message reactions section */}
+          <MessageReactions
+            reactions={message.reactions || []}
+            onReact={handleReact}
+            onRemoveReaction={handleRemoveReaction}
+            currentUserId={currentUser?.id || ''}
+          />
+
+          {/* Reply in thread button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs gap-1 hover:bg-muted"
+            onClick={() => setIsThreadOpen(true)}
+          >
+            <MessageSquare className="h-3 w-3" />
+            {message.thread?.messages?.length ? `${message.thread.messages.length} replies` : 'Reply'}
+          </Button>
+        </div>
       </div>
+
+      {/* Thread view */}
+      <Thread
+        parentMessage={message}
+        isOpen={isThreadOpen}
+        onClose={() => setIsThreadOpen(false)}
+      />
     </div>
   );
 } 

@@ -121,6 +121,22 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       });
 
       /**
+       * Event: thread:join
+       * Adds the client to a specific thread's room
+       */
+      socket.on('thread:join', async (threadId: string) => {
+        try {
+          // Join the thread room
+          const roomName = `thread:${threadId}`;
+          socket.join(roomName);
+          console.log(`Socket ${socket.id} joined thread room ${roomName}`);
+        } catch (error) {
+          console.error('Error joining thread:', error);
+          socket.emit('error', 'Failed to join thread');
+        }
+      });
+
+      /**
        * Event: message
        * Handles new message creation and broadcasting
        * Supports both channel messages and direct messages (DMs)
@@ -134,6 +150,7 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
               userId: message.userId,
               channelId: message.channelId,
               toUserId: message.toUserId,
+              threadId: message.threadId,
             },
             include: {
               user: {
@@ -145,12 +162,31 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
                   lastName: true,
                   imageUrl: true,
                 }
-              }
-            }
+              },
+              reactions: {
+                include: {
+                  user: {
+                    select: {
+                      displayName: true,
+                      email: true,
+                    }
+                  },
+                },
+              },
+              thread: {
+                include: {
+                  messages: true,
+                },
+              },
+            },
           });
 
-          // Broadcast message to appropriate recipients based on message type
-          if (message.channelId) {
+          // If this is a new thread message, create or update the thread
+          if (message.threadId) {
+            console.log('Broadcasting thread message:', savedMessage);
+            // Broadcast to thread room
+            io.to(`thread:${message.threadId}`).emit('thread:message', savedMessage);
+          } else if (message.channelId) {
             // Channel messages go to everyone in the channel
             io.to(`channel:${message.channelId}`).emit('message', savedMessage);
           } else if (message.toUserId) {

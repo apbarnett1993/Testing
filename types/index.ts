@@ -23,6 +23,11 @@ export interface Message {
       email: string;
     };
   }>;
+  thread?: {
+    id: string;
+    messages: Array<Message>;
+  };
+  threadId?: string;
 }
 
 export interface User {

@@ -21,6 +21,7 @@ model User {
   messages      Message[] @relation("UserMessages")
   receivedDMs   Message[] @relation("ReceivedDMs")
   reactions     MessageReaction[]
+  threads       Thread[]  @relation("ThreadParticipants")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -35,6 +36,12 @@ model Message {
   toUserId  String?  // for DMs
   toUser    User?    @relation("ReceivedDMs", fields: [toUserId], references: [id])
   reactions MessageReaction[]
+  
+  // Thread relationships
+  threadId      String?   // If this message is part of a thread
+  thread        Thread?   @relation("ThreadMessages", fields: [threadId], references: [id])
+  parentMessage Thread?   @relation("ParentMessage")
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -60,4 +67,16 @@ model MessageReaction {
 
   // Prevent duplicate reactions from the same user on the same message with the same emoji
   @@unique([userId, messageId, emoji])
+}
+
+model Thread {
+  id              String    @id @default(uuid())
+  parentMessageId String    @unique
+  parentMessage   Message   @relation("ParentMessage", fields: [parentMessageId], references: [id])
+  messages        Message[] @relation("ThreadMessages")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Track participants (users who have sent messages in this thread)
+  participants    User[]    @relation("ThreadParticipants")
 } 

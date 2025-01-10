@@ -25,10 +25,15 @@ export interface MessageWithUser {
   userId: string;
   channelId: string | null;
   toUserId: string | null;
+  threadId?: string;
   createdAt: Date;
   updatedAt: Date;
   user: MessageUser;
   reactions?: MessageReaction[];
+  thread?: {
+    id: string;
+    messages: MessageWithUser[];
+  };
 }
 
 export interface ServerToClientEvents {
@@ -36,6 +41,7 @@ export interface ServerToClientEvents {
   error: (message: string) => void;
   'reaction:add': (reaction: MessageReaction) => void;
   'reaction:remove': (reaction: MessageReaction) => void;
+  'thread:message': (message: MessageWithUser) => void;
 }
 
 export interface ReactionPayload {
@@ -62,11 +68,13 @@ export interface MessageReaction {
 export interface ClientToServerEvents {
   join_channels: () => void;
   join_channel: (channelId: string) => void;
+  'thread:join': (threadId: string) => void;
   message: (message: {
     content: string;
     userId: string;
     channelId?: string;
     toUserId?: string;
+    threadId?: string;
   }) => void;
   'reaction:add': (reaction: ReactionPayload) => void;
   'reaction:remove': (reaction: RemoveReactionPayload) => void;
