@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useCallback, useContext, useState } from "react";
-import { MessageWithUser } from "@/types/socket";
+import { MessageWithUser, MessageReaction } from "@/types/socket";
 
 interface MessagesContextType {
   messages: MessageWithUser[];
@@ -9,6 +9,8 @@ interface MessagesContextType {
   error: string | null;
   fetchMessages: (channelId?: string, toUserId?: string) => Promise<void>;
   addMessage: (message: MessageWithUser) => void;
+  handleAddReaction: (reaction: MessageReaction) => void;
+  handleRemoveReaction: (reaction: MessageReaction) => void;
 }
 
 const MessagesContext = createContext<MessagesContextType | undefined>(undefined);
@@ -46,8 +48,49 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     setMessages(prev => [...prev, message]);
   }, []);
 
+  const handleAddReaction = useCallback((reaction: MessageReaction) => {
+    setMessages((prev) => {
+      return prev.map((msg) => {
+        if (msg.id === reaction.messageId) {
+          // Add the new reaction
+          return {
+            ...msg,
+            reactions: [...(msg.reactions || []), reaction],
+          };
+        }
+        return msg;
+      });
+    });
+  }, []);
+
+  const handleRemoveReaction = useCallback((reaction: MessageReaction) => {
+    setMessages((prev) => {
+      return prev.map((msg) => {
+        if (msg.id === reaction.messageId) {
+          return {
+            ...msg,
+            reactions: (msg.reactions || []).filter(
+              (r) => !(r.emoji === reaction.emoji && r.userId === reaction.userId)
+            ),
+          };
+        }
+        return msg;
+      });
+    });
+  }, []);
+
   return (
-    <MessagesContext.Provider value={{ messages, isLoading, error, fetchMessages, addMessage }}>
+    <MessagesContext.Provider 
+      value={{ 
+        messages, 
+        isLoading, 
+        error, 
+        fetchMessages, 
+        addMessage,
+        handleAddReaction,
+        handleRemoveReaction
+      }}
+    >
       {children}
     </MessagesContext.Provider>
   );
@@ -60,4 +103,6 @@ export function useMessages() {
   }
   return context;
 }
+
+
 

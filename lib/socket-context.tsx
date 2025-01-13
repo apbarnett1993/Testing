@@ -16,7 +16,7 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const { addMessage } = useMessages();
+  const { addMessage, handleAddReaction, handleRemoveReaction } = useMessages();
   const { getToken, userId } = useAuth();
 
   useEffect(() => {
@@ -72,6 +72,16 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           // Thread messages are handled by the Thread component
         });
 
+        socketInstance.on("reaction:add", (reaction) => {
+          console.log("Received reaction:add", reaction);
+          handleAddReaction(reaction);
+        });
+
+        socketInstance.on("reaction:remove", (reaction) => {
+          console.log("Received reaction:remove", reaction);
+          handleRemoveReaction(reaction);
+        });
+
         setSocket(socketInstance);
       }
     }
@@ -87,10 +97,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         socket.off('error');
         socket.off('message');
         socket.off('thread:message');
+        socket.off('reaction:add');
+        socket.off('reaction:remove');
         socket.disconnect();
       }
     };
-  }, [socket, userId, getToken, addMessage]);
+  }, [socket, userId, getToken, addMessage, handleAddReaction, handleRemoveReaction]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

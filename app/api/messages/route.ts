@@ -83,8 +83,18 @@ export async function GET(req: Request) {
               firstName: true,
               lastName: true,
               imageUrl: true,
-            }
-          }
+            },
+          },
+          reactions: {
+            include: {
+              user: {
+                select: {
+                  displayName: true,
+                  email: true,
+                },
+              },
+            },
+          },
         },
         orderBy: {
           createdAt: "asc",

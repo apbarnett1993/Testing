@@ -60,7 +60,7 @@ export function MessageComponent({ message }: MessageProps) {
       messageId: message.id,
       emoji
     };
-    //socket.emit('reaction:add', payload);
+    socket.emit('reaction:add', payload);
   };
 
   const handleRemoveReaction = (reactionId: string) => {
@@ -76,7 +76,7 @@ export function MessageComponent({ message }: MessageProps) {
       emoji: reaction.emoji,
       userId: currentUser.id
     };
-    //socket.emit('reaction:remove', payload);
+    socket.emit('reaction:remove', payload);
   };
 
   return (
