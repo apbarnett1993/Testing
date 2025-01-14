@@ -1,0 +1,15 @@
+.git
+.gitignore
+*.md
+.next
+.env
+.env.local
+node_modules
+npm-debug.log
+README.md
+.dockerignore
+Dockerfile
+docker-compose.yml
+dist 
+GauntletChatKey.pem
+notes.txt

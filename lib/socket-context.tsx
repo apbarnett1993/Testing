@@ -20,89 +20,95 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const { getToken, userId } = useAuth();
 
   useEffect(() => {
+    let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+
     async function initSocket() {
-      if (!socket && userId) {
-        console.log('Initializing socket connection');
-        const token = await getToken();
-        console.log('Got auth token:', token ? 'Token exists' : 'No token');
-        console.log('Current userId:', userId);
-        
-        const socketInstance = io({
-          path: '/api/socket',
-          auth: {
-            token,
-            userId
-          }
-        });
+      if (!userId) return;
 
-        // Set up event listeners
-        socketInstance.on('connect', () => {
-          console.log('Socket connected:', socketInstance.id);
-          setIsConnected(true);
-          socketInstance.emit('join_channels');
-        });
-
-        socketInstance.on('disconnect', () => {
-          console.log('Socket disconnected');
-          setIsConnected(false);
-        });
-
-        socketInstance.on('error', (message) => {
-          console.error('Socket error:', message);
-          // Reconnect if unauthorized
-          if (message === 'Unauthorized') {
-            console.log('Attempting to reconnect...');
-            socketInstance.disconnect();
-            setSocket(null);
-          }
-        });
-
-        // Handle incoming messages
-        socketInstance.on('message', (message: MessageWithUser) => {
-          console.log('Received message:', message);
-          // Only add to main channel if it's not a thread message
-          if (!message.threadId) {
-            addMessage(message);
-          }
-        });
-
-        // Handle thread messages separately
-        socketInstance.on('thread:message', (message: MessageWithUser) => {
-          console.log('Received thread message:', message);
-          // Thread messages are handled by the Thread component
-        });
-
-        socketInstance.on("reaction:add", (reaction) => {
-          console.log("Received reaction:add", reaction);
-          handleAddReaction(reaction);
-        });
-
-        socketInstance.on("reaction:remove", (reaction) => {
-          console.log("Received reaction:remove", reaction);
-          handleRemoveReaction(reaction);
-        });
-
-        setSocket(socketInstance);
+      // Cleanup existing socket if any
+      if (socket) {
+        socket.disconnect();
       }
+
+      console.log('Initializing socket connection');
+      const token = await getToken();
+      
+      socketInstance = io({
+        path: '/api/socket',
+        auth: {
+          token,
+          userId
+        }
+      });
+
+      // Set up event listeners
+      socketInstance.on('connect', () => {
+        console.log('Socket connected:', socketInstance?.id);
+        setIsConnected(true);
+        socketInstance?.emit('join_channels');
+      });
+
+      socketInstance.on('disconnect', () => {
+        console.log('Socket disconnected');
+        setIsConnected(false);
+      });
+
+      socketInstance.on('error', (message) => {
+        console.error('Socket error:', message);
+        if (message === 'Unauthorized') {
+          console.log('Attempting to reconnect...');
+          socketInstance?.disconnect();
+          setSocket(null);
+        }
+      });
+
+      // Handle incoming messages
+      socketInstance.on('message', (message: MessageWithUser) => {
+        console.log('Received message:', message);
+        // Only add if it's not from the current user to prevent duplicates
+        if (message.userId !== userId && !message.threadId) {
+          addMessage(message);
+        }
+      });
+
+      // Handle thread messages separately
+      socketInstance.on('thread:message', (message: MessageWithUser) => {
+        console.log('Received thread message:', message);
+        // Thread messages are handled by the Thread component
+      });
+
+      socketInstance.on("reaction:add", (reaction) => {
+        console.log("Received reaction:add", reaction);
+        handleAddReaction(reaction);
+      });
+
+      socketInstance.on("reaction:remove", (reaction) => {
+        console.log("Received reaction:remove", reaction);
+        handleRemoveReaction(reaction);
+      });
+
+      setSocket(socketInstance);
     }
 
     initSocket().catch(err => {
       console.error('Failed to initialize socket:', err);
     });
 
+    // Cleanup function
     return () => {
-      if (socket) {
-        socket.off('connect');
-        socket.off('disconnect');
-        socket.off('error');
-        socket.off('message');
-        socket.off('thread:message');
-        socket.off('reaction:add');
-        socket.off('reaction:remove');
-        socket.disconnect();
+      if (socketInstance) {
+        console.log('Cleaning up socket connection');
+        socketInstance.off('connect');
+        socketInstance.off('disconnect');
+        socketInstance.off('error');
+        socketInstance.off('message');
+        socketInstance.off('thread:message');
+        socketInstance.off('reaction:add');
+        socketInstance.off('reaction:remove');
+        socketInstance.disconnect();
       }
     };
-  }, [socket, userId, getToken, addMessage, handleAddReaction, handleRemoveReaction]);
+  }, [userId]); // Only reinitialize when userId changes
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

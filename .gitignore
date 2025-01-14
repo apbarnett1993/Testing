@@ -36,3 +36,9 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+
+#AWS
+GauntletChatKey.pem
+
+#notes
+notes.txt
