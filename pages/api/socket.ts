@@ -151,6 +151,18 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
               channelId: message.channelId,
               toUserId: message.toUserId,
               threadId: message.threadId,
+              ...(message.attachments && {
+                attachments: {
+                  createMany: {
+                    data: message.attachments.map(att => ({
+                      filename: att.filename,
+                      url: att.url,
+                      size: att.size,
+                      mimeType: att.mimeType,
+                    })),
+                  },
+                },
+              }),
             },
             include: {
               user: {
@@ -173,6 +185,7 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
                   },
                 },
               },
+              attachments: true,
               thread: {
                 include: {
                   messages: true,

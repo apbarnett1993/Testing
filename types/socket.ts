@@ -25,15 +25,16 @@ export interface MessageWithUser {
   userId: string;
   channelId: string | null;
   toUserId: string | null;
-  threadId?: string;
+  threadId: string | null;
   createdAt: Date;
   updatedAt: Date;
   user: MessageUser;
   reactions?: MessageReaction[];
+  attachments?: FileAttachment[];
   thread?: {
     id: string;
     messages: MessageWithUser[];
-  };
+  } | null;
 }
 
 export interface ServerToClientEvents {
@@ -65,6 +66,15 @@ export interface MessageReaction {
   };
 }
 
+export interface FileAttachment {
+  id: string;
+  filename: string;
+  url: string;
+  size: number;
+  mimeType: string;
+  messageId: string;
+}
+
 export interface ClientToServerEvents {
   join_channels: () => void;
   join_channel: (channelId: string) => void;
@@ -75,6 +85,12 @@ export interface ClientToServerEvents {
     channelId?: string;
     toUserId?: string;
     threadId?: string;
+    attachments?: Array<{
+      filename: string;
+      url: string;
+      size: number;
+      mimeType: string;
+    }>;
   }) => void;
   'reaction:add': (reaction: ReactionPayload) => void;
   'reaction:remove': (reaction: RemoveReactionPayload) => void;

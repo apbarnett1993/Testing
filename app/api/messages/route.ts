@@ -12,20 +12,32 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { content, channelId, toUserId } = await req.json();
-    console.log("POST - Message data:", { content, channelId, toUserId });
+    const { content, channelId, toUserId, attachments } = await req.json();
+    console.log("POST - Message data:", { content, channelId, toUserId, attachments });
 
     if (!content) {
       return new NextResponse("Content is required", { status: 400 });
     }
 
-    // Create message
+    // Create message with attachments if present
     const message = await prisma.message.create({
       data: {
         content,
         userId,
         channelId,
         toUserId,
+        ...(attachments && {
+          attachments: {
+            createMany: {
+              data: attachments.map((att: any) => ({
+                filename: att.filename,
+                url: att.url,
+                size: att.size,
+                mimeType: att.mimeType,
+              })),
+            },
+          },
+        }),
       },
       include: {
         user: {
@@ -37,7 +49,8 @@ export async function POST(req: Request) {
             lastName: true,
             imageUrl: true,
           }
-        }
+        },
+        attachments: true,
       }
     });
 
@@ -95,6 +108,7 @@ export async function GET(req: Request) {
               },
             },
           },
+          attachments: true,
         },
         orderBy: {
           createdAt: "asc",
@@ -121,7 +135,8 @@ export async function GET(req: Request) {
               lastName: true,
               imageUrl: true,
             }
-          }
+          },
+          attachments: true,
         },
         orderBy: {
           createdAt: "asc",

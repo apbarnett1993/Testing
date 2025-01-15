@@ -1,15 +1,69 @@
+# Version control
 .git
 .gitignore
-*.md
+.github
+
+# Build outputs
 .next
-.env
-.env.local
+dist
+build
+out
+
+# Dependencies
 node_modules
-npm-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and secrets
+.env*
+*.pem
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Development files
+*.md
 README.md
+CHANGELOG.md
 .dockerignore
 Dockerfile
 docker-compose.yml
-dist 
+.editorconfig
+.prettierrc
+.eslintrc
+.vscode
+.idea
+
+# Testing
+coverage
+*.test.js
+*.spec.js
+__tests__
+__mocks__
+
+# Temporary files
+*.log
+.DS_Store
+.cache
+*.tmp
+*.temp
+*.swp
+
+# Project specific
 GauntletChatKey.pem
 notes.txt
+archive
+all_code.txt
+directory_tree.txt
+combined_all.txt
+file-list.sh
+file-list-v2.sh
+*.db
+*.db-journal
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+prisma/old_migrations

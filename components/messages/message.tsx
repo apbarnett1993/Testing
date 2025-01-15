@@ -40,6 +40,13 @@ interface MessageProps {
         email: string;
       };
     }>;
+    attachments?: Array<{
+      id: string;
+      filename: string;
+      url: string;
+      size: number;
+      mimeType: string;
+    }>;
   };
 }
 
@@ -78,6 +85,18 @@ export function MessageComponent({ message }: MessageProps) {
     };
     socket.emit('reaction:remove', payload);
   };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    const kb = bytes / 1024;
+    if (kb < 1024) return kb.toFixed(1) + ' KB';
+    const mb = kb / 1024;
+    return mb.toFixed(1) + ' MB';
+  };
+
+  const isImage = (mimeType: string) => mimeType.startsWith('image/');
+  const isVideo = (mimeType: string) => mimeType.startsWith('video/');
+  const isAudio = (mimeType: string) => mimeType.startsWith('audio/');
 
   return (
     // Container with conditional flex direction based on message ownership
@@ -118,6 +137,55 @@ export function MessageComponent({ message }: MessageProps) {
           } [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4`}
           dangerouslySetInnerHTML={{ __html: message.content }}
         />
+
+        {/* Attachments */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="flex flex-col gap-2 mt-2">
+            {message.attachments.map((attachment) => (
+              <div
+                key={attachment.id}
+                className={`flex items-center gap-2 p-2 rounded-lg ${
+                  isOwn ? 'bg-primary/10' : 'bg-muted/50'
+                }`}
+              >
+                {isImage(attachment.mimeType) ? (
+                  <a
+                    href={attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block max-w-sm"
+                  >
+                    <img
+                      src={attachment.url}
+                      alt={attachment.filename}
+                      className="rounded-lg max-h-48 object-cover"
+                    />
+                  </a>
+                ) : isVideo(attachment.mimeType) ? (
+                  <video
+                    src={attachment.url}
+                    controls
+                    className="rounded-lg max-h-48"
+                  />
+                ) : isAudio(attachment.mimeType) ? (
+                  <audio src={attachment.url} controls className="w-full" />
+                ) : (
+                  <a
+                    href={attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-blue-500 hover:underline"
+                  >
+                    <span>{attachment.filename}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({formatFileSize(attachment.size)})
+                    </span>
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Message actions */}
         <div className="flex items-center gap-2">

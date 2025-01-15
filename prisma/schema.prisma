@@ -38,6 +38,7 @@ model Message {
   toUserId  String?  // for DMs
   toUser    User?    @relation("ReceivedDMs", fields: [toUserId], references: [id])
   reactions MessageReaction[]
+  attachments FileAttachment[]
   
   // Thread relationships
   threadId      String?   // If this message is part of a thread
@@ -81,4 +82,16 @@ model Thread {
 
   // Track participants (users who have sent messages in this thread)
   participants    User[]    @relation("ThreadParticipants")
+}
+
+model FileAttachment {
+  id          String   @id @default(uuid())
+  filename    String
+  url         String
+  size        Int      // in bytes
+  mimeType    String
+  messageId   String
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 } 
