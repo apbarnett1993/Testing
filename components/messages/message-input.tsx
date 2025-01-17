@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { useUser } from "@clerk/nextjs"
-import { SendHorizontal, Paperclip, X } from "lucide-react"
+import { SendHorizontal, Paperclip, X, Bot } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useSocket } from "@/lib/socket"
 import { RichTextEditor } from "./rich-text-editor"
@@ -126,15 +126,49 @@ export function MessageInput({ channelId, toUserId, threadId }: MessageInputProp
           disabled={isLoading}
         />
         <div className="flex justify-between items-center">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading}
-          >
-            <Paperclip className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                if (!user || isLoading || !content.trim()) return;
+                try {
+                  setIsLoading(true);
+                  await fetch('/api/bot', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      content: `${content.trim()}\nbot:`,
+                      userId: user.id,
+                      channelId,
+                      toUserId,
+                      threadId,
+                    }),
+                  });
+                  setContent(""); // Clear the input after sending
+                } catch (error) {
+                  console.error("Failed to send bot message:", error);
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              disabled={isLoading || !content.trim()}
+            >
+              <Bot className="h-4 w-4" />
+            </Button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"

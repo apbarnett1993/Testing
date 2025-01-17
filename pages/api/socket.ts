@@ -6,7 +6,7 @@
 import { Server as NetServer } from 'http';
 import { NextApiRequest } from 'next';
 import { Server as ServerIO } from 'socket.io';
-import { NextApiResponseServerIO, ServerToClientEvents, ClientToServerEvents } from '@/types/socket';
+import { NextApiResponseServerIO, ServerToClientEvents, ClientToServerEvents, MessageWithUser } from '@/types/socket';
 import { prisma } from '@/lib/db';
 
 // Disable Next.js body parsing since WebSocket connections don't use HTTP body
@@ -47,6 +47,9 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       path: '/api/socket',
       addTrailingSlash: false,
     });
+
+    // Store io instance globally for other API routes
+    (global as any).io = io;
 
     // Add middleware to handle auth
     io.use((socket, next) => {
@@ -143,8 +146,88 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
        */
       socket.on('message', async (message) => {
         try {
+          // Check if this is a bot command
+          if (message.content.startsWith('@bot')) {
+            // For now, just respond with "Hello World!"
+            const botData = {
+              content: "Hello World!",
+              userId: message.userId,
+              channelId: message.channelId,
+              toUserId: message.toUserId,
+              threadId: message.threadId,
+            };
+
+            const dbBotMessage = await prisma.message.create({
+              data: botData,
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    displayName: true,
+                    firstName: true,
+                    lastName: true,
+                    imageUrl: true,
+                  }
+                },
+                reactions: {
+                  include: {
+                    user: {
+                      select: {
+                        displayName: true,
+                        email: true,
+                      }
+                    },
+                  },
+                },
+                attachments: true,
+                thread: {
+                  include: {
+                    messages: {
+                      include: {
+                        user: true,
+                        reactions: {
+                          include: {
+                            user: true,
+                          },
+                        },
+                        attachments: true,
+                      },
+                    },
+                  },
+                },
+              },
+            });
+
+            const botMessage: MessageWithUser = {
+              id: dbBotMessage.id,
+              content: dbBotMessage.content,
+              userId: dbBotMessage.userId,
+              channelId: dbBotMessage.channelId,
+              toUserId: dbBotMessage.toUserId,
+              threadId: dbBotMessage.threadId,
+              createdAt: dbBotMessage.createdAt,
+              updatedAt: dbBotMessage.updatedAt,
+              user: dbBotMessage.user,
+              reactions: dbBotMessage.reactions,
+              attachments: dbBotMessage.attachments,
+              thread: dbBotMessage.thread ? {
+                id: dbBotMessage.thread.id,
+                messages: dbBotMessage.thread.messages as MessageWithUser[],
+              } : null,
+            };
+
+            // Emit the bot's response
+            if (message.channelId) {
+              io.to(`channel:${message.channelId}`).emit('message', botMessage);
+            } else if (message.toUserId) {
+              io.to(`user:${message.userId}`).to(`user:${message.toUserId}`).emit('message', botMessage);
+            }
+            return;
+          }
+
           // Save message to database with associated user info
-          const savedMessage = await prisma.message.create({
+          const dbMessage = await prisma.message.create({
             data: {
               content: message.content,
               userId: message.userId,
@@ -188,11 +271,39 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
               attachments: true,
               thread: {
                 include: {
-                  messages: true,
+                  messages: {
+                    include: {
+                      user: true,
+                      reactions: {
+                        include: {
+                          user: true,
+                        },
+                      },
+                      attachments: true,
+                    },
+                  },
                 },
               },
             },
           });
+
+          const savedMessage: MessageWithUser = {
+            id: dbMessage.id,
+            content: dbMessage.content,
+            userId: dbMessage.userId,
+            channelId: dbMessage.channelId,
+            toUserId: dbMessage.toUserId,
+            threadId: dbMessage.threadId,
+            createdAt: dbMessage.createdAt,
+            updatedAt: dbMessage.updatedAt,
+            user: dbMessage.user,
+            reactions: dbMessage.reactions,
+            attachments: dbMessage.attachments,
+            thread: dbMessage.thread ? {
+              id: dbMessage.thread.id,
+              messages: dbMessage.thread.messages as MessageWithUser[],
+            } : null,
+          };
 
           // If this is a new thread message, create or update the thread
           if (message.threadId) {

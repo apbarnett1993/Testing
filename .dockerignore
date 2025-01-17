@@ -67,3 +67,4 @@ file-list-v2.sh
 prisma/*.db
 prisma/*.db-journal
 prisma/old_migrations
+prisma/migrations
